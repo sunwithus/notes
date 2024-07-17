@@ -1,0 +1,127 @@
+техническое задание 
+язык программирования - C#
+интерфейс - web-браузер
+
+есть БД Oracle, нужно извлекать из базы информацию, обрабатывать, результат заносить в эту же базу
+использую using Oracle.ManagedDataAccess.Client; из nuGet
+пример запроса:
+SELECT * FROM test.SPR_SPEECH_TABLE WHERE S_INCKEY=(SELECT max(S_INCKEY) FROM test.SPR_SPEECH_TABLE);
+пример метода:
+    private void InsertIntoTable(OracleConnection connection, OracleTransaction transaction, int key, int duration)
+    {
+        string durationString = string.Format("+00 {0:D2}:{1:D2}:{2:D2}.000000", duration / 3600, (duration % 3600) / 60, duration % 60);
+        using (OracleCommand insertCommand = connection.CreateCommand())
+        {
+            insertCommand.Transaction = transaction;
+            insertCommand.CommandText = $"INSERT INTO TEST.SPR_SPEECH_TABLE (S_INCKEY, S_TYPE, S_DURATION, S_DATETIME, S_NOTICE) " +
+                                        "VALUES (:S_INCKEY, :S_DURATION, :S_DATETIME, :S_NOTICE)";
+            insertCommand.Parameters.Add(":S_INCKEY", OracleDbType.Int32).Value = key;
+            insertCommand.Parameters.Add(":S_DURATION", OracleDbType.Varchar2).Value = durationString;
+			insertCommand.Parameters.Add(":S_DATETIME", OracleDbType.TimeStamp).Value = timestamp;
+            insertCommand.Parameters.Add(":S_NOTICE", OracleDbType.Varchar2).Value = "комментарий какой-нибудь"; // "S_NOTICE" VARCHAR2(100 CHAR)
+            insertCommand.ExecuteNonQuery();
+        }
+    }
+
+
+1) нужно обработать всю БД где пользователь задаст границы S_DATETIME от 01.01.2024 до 10.01.2024
+2) отобразить в виде строки обрабатываемую запись, использовать стилизацию MudBlazor
+3) внести в S_NOTICE какую-либо запись
+4) вывести сообщение о том, что запись сделана
+
+
+показывать текущее состояние - независимо от перезагрузки браузера. 
+возможность остановить процесс, поставить на паузу запустить.
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using Oracle.ManagedDataAccess.Client;
+
+public partial class Default2 : System.Web.UI.Page
+{
+    protected void Page_Load(object sender, EventArgs e)
+    {
+    }
+
+    protected void btn_fetch_Click(object sender, EventArgs e)
+    {
+        string oradb = "Data Source=(DESCRIPTION =" +
+            "(ADDRESS = (PROTOCOL = TCP)(HOST = your_host_name)(PORT = 1521))" +
+            "(CONNECT_DATA =" +
+            "(SERVER = DEDICATED)" +
+            "(SERVICE_NAME = XE)));" +
+            "User Id=your_user_id;Password=*******;";
+
+        OracleConnection con = new OracleConnection(oradb);
+        OracleCommand cmd = new OracleCommand();
+
+        try
+        {
+            con.Open();
+
+            // Fetch data from the database
+            cmd.CommandText = "SELECT * FROM test.SPR_SPEECH_TABLE WHERE S_DATETIME BETWEEN TO_DATE('01.01.2024', 'DD.MM.YYYY') AND TO_DATE('10.01.2024', 'DD.MM.YYYY')";
+            cmd.Connection = con;
+            OracleDataReader dr = cmd.ExecuteReader();
+
+            if (dr.HasRows)
+            {
+                Response.Write("<table border='1'>");
+                Response.Write("<tr><th>S_INCKEY</th><th>S_TYPE</th><th>S_DURATION</th><th>S_DATETIME</th><th>S_NOTICE</th></tr>");
+
+                while (dr.Read())
+                {
+                    Response.Write("<tr>");
+                    Response.Write("<td>" + dr["S_INCKEY"].ToString() + "</td>");
+                    Response.Write("<td>" + dr["S_TYPE"].ToString() + "</td>");
+                    Response.Write("<td>" + dr["S_DURATION"].ToString() + "</td>");
+                    Response.Write("<td>" + dr["S_DATETIME"].ToString() + "</td>");
+                    Response.Write("<td>" + dr["S_NOTICE"].ToString() + "</td>");
+                    Response.Write("</tr>");
+                }
+
+                Response.Write("</table>");
+            }
+            else
+            {
+                Response.Write("No Data In DataBase");
+            }
+
+            // Insert a new record
+            OracleTransaction transaction = con.BeginTransaction();
+            InsertIntoTable(con, transaction, 1, 3600);
+            transaction.Commit();
+
+            Response.Write("Record inserted successfully.");
+        }
+        catch (Exception ex)
+        {
+            Response.Write("Error: " + ex.Message);
+        }
+        finally
+        {
+            con.Close();
+        }
+    }
+
+    private void InsertIntoTable(OracleConnection connection, OracleTransaction transaction, int key, int duration)
+    {
+        string durationString = string.Format("+00 {0:D2}:{1:D2}:{2:D2}.000000", duration / 3600, (duration % 3600) / 60, duration % 60);
+        using (OracleCommand insertCommand = connection.CreateCommand())
+        {
+            insertCommand.Transaction = transaction;
+            insertCommand.CommandText = $"INSERT INTO TEST.SPR_SPEECH_TABLE (S_INCKEY, S_TYPE, S_DURATION, S_DATETIME, S_NOTICE) " +
+                                        "VALUES (:S_INCKEY, :S_DURATION, :S_DATETIME, :S_NOTICE)";
+            insertCommand.Parameters.Add(":S_INCKEY", OracleDbType.Int32).Value = key;
+            insertCommand.Parameters.Add(":S_DURATION", OracleDbType.Varchar2).Value = durationString;
+            insertCommand.Parameters.Add(":S_DATETIME", OracleDbType.TimeStamp).Value = DateTime.Now;
+            insertCommand.Parameters.Add(":S_NOTICE", OracleDbType.Varchar2).Value = "Some comment";
+            insertCommand.ExecuteNonQuery();
+        }
+    }
+}
