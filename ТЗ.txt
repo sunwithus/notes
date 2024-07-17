@@ -1,12 +1,12 @@
-техническое задание 
-язык программирования - C#
-интерфейс - web-браузер
+С‚РµС…РЅРёС‡РµСЃРєРѕРµ Р·Р°РґР°РЅРёРµ 
+СЏР·С‹Рє РїСЂРѕРіСЂР°РјРјРёСЂРѕРІР°РЅРёСЏ - C#
+РёРЅС‚РµСЂС„РµР№СЃ - web-Р±СЂР°СѓР·РµСЂ
 
-есть БД Oracle, нужно извлекать из базы информацию, обрабатывать, результат заносить в эту же базу
-использую using Oracle.ManagedDataAccess.Client; из nuGet
-пример запроса:
+РµСЃС‚СЊ Р‘Р” Oracle, РЅСѓР¶РЅРѕ РёР·РІР»РµРєР°С‚СЊ РёР· Р±Р°Р·С‹ РёРЅС„РѕСЂРјР°С†РёСЋ, РѕР±СЂР°Р±Р°С‚С‹РІР°С‚СЊ, СЂРµР·СѓР»СЊС‚Р°С‚ Р·Р°РЅРѕСЃРёС‚СЊ РІ СЌС‚Сѓ Р¶Рµ Р±Р°Р·Сѓ
+РёСЃРїРѕР»СЊР·СѓСЋ using Oracle.ManagedDataAccess.Client; РёР· nuGet
+РїСЂРёРјРµСЂ Р·Р°РїСЂРѕСЃР°:
 SELECT * FROM test.SPR_SPEECH_TABLE WHERE S_INCKEY=(SELECT max(S_INCKEY) FROM test.SPR_SPEECH_TABLE);
-пример метода:
+РїСЂРёРјРµСЂ РјРµС‚РѕРґР°:
     private void InsertIntoTable(OracleConnection connection, OracleTransaction transaction, int key, int duration)
     {
         string durationString = string.Format("+00 {0:D2}:{1:D2}:{2:D2}.000000", duration / 3600, (duration % 3600) / 60, duration % 60);
@@ -18,20 +18,20 @@ SELECT * FROM test.SPR_SPEECH_TABLE WHERE S_INCKEY=(SELECT max(S_INCKEY) FROM te
             insertCommand.Parameters.Add(":S_INCKEY", OracleDbType.Int32).Value = key;
             insertCommand.Parameters.Add(":S_DURATION", OracleDbType.Varchar2).Value = durationString;
 			insertCommand.Parameters.Add(":S_DATETIME", OracleDbType.TimeStamp).Value = timestamp;
-            insertCommand.Parameters.Add(":S_NOTICE", OracleDbType.Varchar2).Value = "комментарий какой-нибудь"; // "S_NOTICE" VARCHAR2(100 CHAR)
+            insertCommand.Parameters.Add(":S_NOTICE", OracleDbType.Varchar2).Value = "РєРѕРјРјРµРЅС‚Р°СЂРёР№ РєР°РєРѕР№-РЅРёР±СѓРґСЊ"; // "S_NOTICE" VARCHAR2(100 CHAR)
             insertCommand.ExecuteNonQuery();
         }
     }
 
 
-1) нужно обработать всю БД где пользователь задаст границы S_DATETIME от 01.01.2024 до 10.01.2024
-2) отобразить в виде строки обрабатываемую запись, использовать стилизацию MudBlazor
-3) внести в S_NOTICE какую-либо запись
-4) вывести сообщение о том, что запись сделана
+1) РЅСѓР¶РЅРѕ РѕР±СЂР°Р±РѕС‚Р°С‚СЊ РІСЃСЋ Р‘Р” РіРґРµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ Р·Р°РґР°СЃС‚ РіСЂР°РЅРёС†С‹ S_DATETIME РѕС‚ 01.01.2024 РґРѕ 10.01.2024
+2) РѕС‚РѕР±СЂР°Р·РёС‚СЊ РІ РІРёРґРµ СЃС‚СЂРѕРєРё РѕР±СЂР°Р±Р°С‚С‹РІР°РµРјСѓСЋ Р·Р°РїРёСЃСЊ, РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ СЃС‚РёР»РёР·Р°С†РёСЋ MudBlazor
+3) РІРЅРµСЃС‚Рё РІ S_NOTICE РєР°РєСѓСЋ-Р»РёР±Рѕ Р·Р°РїРёСЃСЊ
+4) РІС‹РІРµСЃС‚Рё СЃРѕРѕР±С‰РµРЅРёРµ Рѕ С‚РѕРј, С‡С‚Рѕ Р·Р°РїРёСЃСЊ СЃРґРµР»Р°РЅР°
 
 
-показывать текущее состояние - независимо от перезагрузки браузера. 
-возможность остановить процесс, поставить на паузу запустить.
+РїРѕРєР°Р·С‹РІР°С‚СЊ С‚РµРєСѓС‰РµРµ СЃРѕСЃС‚РѕСЏРЅРёРµ - РЅРµР·Р°РІРёСЃРёРјРѕ РѕС‚ РїРµСЂРµР·Р°РіСЂСѓР·РєРё Р±СЂР°СѓР·РµСЂР°. 
+РІРѕР·РјРѕР¶РЅРѕСЃС‚СЊ РѕСЃС‚Р°РЅРѕРІРёС‚СЊ РїСЂРѕС†РµСЃСЃ, РїРѕСЃС‚Р°РІРёС‚СЊ РЅР° РїР°СѓР·Сѓ Р·Р°РїСѓСЃС‚РёС‚СЊ.
 
 
 using System;
